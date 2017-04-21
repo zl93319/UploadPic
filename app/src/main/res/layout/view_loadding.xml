@@ -1,0 +1,44 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:custom="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/loading_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:visibility="visible"
+    >
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true">
+
+        <com.daimajia.numberprogressbar.NumberProgressBar
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:id="@+id/myProgressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            custom:progress_unreached_color="#CCCCCC"
+            custom:progress_reached_color="#a72c2c"
+            custom:progress_unreached_bar_height="1.75dp"
+            custom:progress_reached_bar_height="3.5dp"
+            custom:progress_text_size="20sp"
+            custom:progress_text_color="#a72c2c"
+            custom:progress_text_offset="1dp"
+            custom:progress_text_visibility="visible"
+            custom:progress_max="100"
+            custom:progress_current="0"
+            />
+
+        <TextView
+            android:layout_marginTop="10dp"
+            android:textColor="#35d7a1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="数据上传中..." />
+    </LinearLayout>
+
+</RelativeLayout>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="get_record_text_selected_color">#33b5e5</color>
+    <color name="tab_item_grayground">#3ee4d3</color>
+    <color name="ll_bg">#33e2d4d4</color>
+    <color name="ll_show">#88e2d4d4</color>
+</resources>
