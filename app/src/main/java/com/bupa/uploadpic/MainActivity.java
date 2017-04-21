@@ -4,6 +4,8 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.SpannableString;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -17,6 +19,7 @@ import com.baoyz.actionsheet.ActionSheet;
 import com.bupa.uploadpic.adapter.ImageAdapter;
 import com.bupa.uploadpic.util.ImageUtils;
 import com.bupa.uploadpic.util.UIUtils;
+import com.bupa.uploadpic.view.BadgeDrawable;
 import com.bupa.uploadpic.view.MyGridView;
 import com.bupa.uploadpic.view.MyToast;
 import com.daimajia.numberprogressbar.NumberProgressBar;
@@ -32,6 +35,8 @@ import cn.finalteam.galleryfinal.FunctionConfig;
 import cn.finalteam.galleryfinal.GalleryFinal;
 import cn.finalteam.galleryfinal.model.PhotoInfo;
 
+import static com.bupa.uploadpic.util.UIUtils.dp2px;
+
 public class MainActivity extends AppCompatActivity {
 
     private MyGridView mGvImage;
@@ -45,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
     private PopupWindow mPopupWindow;
     private View mImageView;
     private LinearLayout mLayoutShow;
+    private BadgeDrawable mDrawable;
+    private SpannableString mSpannableString;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initData() {
-
+        numPic(0);
         mDataList = new LinkedList<>();
         mDataList.addLast("default");// 初始化第一个添加按钮数据
         mAdapter = new ImageAdapter(UIUtils.getContext(), mDataList);
@@ -184,10 +191,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void delete(AdapterView<?> parent, int position) {
+
         mDataList.remove(parent.getItemAtPosition(position));
         mAdapter.update(mDataList); // 刷新图片
         yetNum = mDataList.size() - 1;
-        mTvUpdateimg.setText("可上传10张图片(已上传" + yetNum + "张)");
+        numPic(yetNum);
+    }
+
+    private void numPic(int num) {
+        mDrawable = new BadgeDrawable.Builder()
+                .type(BadgeDrawable.TYPE_WITH_TWO_TEXT_COMPLEMENTARY)
+                .badgeColor(0xffCC9933)
+                .text1("可上传10张")
+                .text2("已经上传"+String.valueOf(num)+"张")
+                .textSize(50)
+                .padding(dp2px(10), dp2px(10), dp2px(10), dp2px(10), dp2px(10))
+                .strokeWidth((int) dp2px(2))
+                .build();
+        mSpannableString = new SpannableString(TextUtils.concat(
+              mDrawable.toSpannable()
+        ));
+
+        mTvUpdateimg.setText(mSpannableString);
     }
 
     private void dialog() {
@@ -254,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
                     mDataList.remove(mDataList.getLast());
                 }
                 mAdapter.update(mDataList); // 刷新图片
-                mTvUpdateimg.setText("可上传10张图片(已上传" + yetNum + "张)");
+                numPic(yetNum);
             }
         }
 
