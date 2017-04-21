@@ -3,6 +3,7 @@ package com.bupa.uploadpic;
 import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableString;
 import android.text.TextUtils;
@@ -27,8 +28,6 @@ import com.daimajia.numberprogressbar.OnProgressBarListener;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import cn.carbs.android.library.MDDialog;
 import cn.finalteam.galleryfinal.FunctionConfig;
@@ -46,12 +45,13 @@ public class MainActivity extends AppCompatActivity {
     private ImageAdapter mAdapter;
     private TextView mTvUpdateimg;
     private NumberProgressBar mProgressBar;
-    private Timer mTimer;
     private PopupWindow mPopupWindow;
     private View mImageView;
     private LinearLayout mLayoutShow;
     private BadgeDrawable mDrawable;
     private SpannableString mSpannableString;
+    private View mShow;
+    private SwitchPagerTask mSwitchPagerTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +68,11 @@ public class MainActivity extends AppCompatActivity {
         mDataList.addLast("default");// 初始化第一个添加按钮数据
         mAdapter = new ImageAdapter(UIUtils.getContext(), mDataList);
         mGvImage.setAdapter(mAdapter);
+        mPopupWindow = new PopupWindow(mImageView,
+                WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT);
+        if (mSwitchPagerTask == null) {
+            mSwitchPagerTask = new SwitchPagerTask();
+        }
     }
 
     private void listener() {
@@ -76,8 +81,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(final AdapterView<?> parent, final View view, final int position, long id) {
                 preview(parent, view, position);
-
-
             }
         });
         mGvImage.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -99,6 +102,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onProgressChange(int current, int max) {
                 upload(current, max);
+            }
+        });
+        mPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                if (isError) {
+                    MyToast.error("上传失败!");
+                    mSwitchPagerTask.stop();
+                    WindowManager.LayoutParams lp = getWindow().getAttributes();
+                    lp.alpha = 1f;
+                    getWindow().setAttributes(lp);
+                    return;
+                }
+                WindowManager.LayoutParams lp = getWindow().getAttributes();
+                lp.alpha = 1f;
+                getWindow().setAttributes(lp);
             }
         });
     }
@@ -131,41 +150,45 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void upload(RippleView rippleView) {
-        mPopupWindow = new PopupWindow(mImageView,
-                WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT);
+
         //设置需要焦点
         mPopupWindow.setFocusable(true);
-        mPopupWindow.setBackgroundDrawable(new ColorDrawable());
+        ColorDrawable cd = new ColorDrawable(0x000000);
+        mPopupWindow.setBackgroundDrawable(cd);
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+        lp.alpha = 0.4f;
+        getWindow().setAttributes(lp);
         //设置进入和出去的动画
         mPopupWindow.setAnimationStyle(R.style.PopupWindowStyle);
         //在给定的view的下面显示， 后面的两个参数分别对应的是x方向和Y方向的偏移量
-        mPopupWindow.showAsDropDown(rippleView, 12, -360);
-        mTimer = new Timer();
-        mTimer.schedule(new TimerTask() {
+        mPopupWindow.showAsDropDown(rippleView,27, -360);
+
+        mSwitchPagerTask = new SwitchPagerTask() {
             @Override
             public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mProgressBar.incrementProgressBy(1);
-                    }
-                });
+                postDelayed(this, 100);
+                mProgressBar.incrementProgressBy(1);
             }
-        }, 1000, 100);
+        };
+        mSwitchPagerTask.start();
     }
 
     boolean isToast;
+    boolean isError;
 
     private void upload(int current, int max) {
         if (max == current) {
             mPopupWindow.dismiss();
             if (!isToast) {
                 MyToast.success("上传成功!");
-                mLayoutShow.setBackgroundColor(0xfff);
+                mProgressBar.setProgress(0);
+                mSwitchPagerTask.stop();
                 isToast = true;
             }
-            mProgressBar.setProgress(0);
+        } else {
+            isError = true;
         }
+
     }
 
     private boolean deleteIma(final AdapterView<?> parent, final int position) {
@@ -203,13 +226,13 @@ public class MainActivity extends AppCompatActivity {
                 .type(BadgeDrawable.TYPE_WITH_TWO_TEXT_COMPLEMENTARY)
                 .badgeColor(0xffCC9933)
                 .text1("可上传10张")
-                .text2("已经上传"+String.valueOf(num)+"张")
+                .text2("已经上传" + String.valueOf(num) + "张")
                 .textSize(50)
                 .padding(dp2px(10), dp2px(10), dp2px(10), dp2px(10), dp2px(10))
                 .strokeWidth((int) dp2px(2))
                 .build();
         mSpannableString = new SpannableString(TextUtils.concat(
-              mDrawable.toSpannable()
+                mDrawable.toSpannable()
         ));
 
         mTvUpdateimg.setText(mSpannableString);
@@ -263,6 +286,7 @@ public class MainActivity extends AppCompatActivity {
         mImageView = View.inflate(UIUtils.getContext(), R.layout.view_loadding, null);
         mProgressBar = (NumberProgressBar) mImageView.findViewById(R.id.myProgressBar);
         mLayoutShow = (LinearLayout) findViewById(R.id.layout_show);
+        mShow = findViewById(R.id.layout_show);
     }
 
     private GalleryFinal.OnHanlderResultCallback mOnHanlderResultCallback = new GalleryFinal.OnHanlderResultCallback() {
@@ -291,7 +315,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        mTimer.cancel();
     }
 
     private Bitmap getBitmap(String data) {
@@ -300,4 +323,35 @@ public class MainActivity extends AppCompatActivity {
                 ImageUtils.getWidth(UIUtils.getContext()) / 3 - 5,
                 ImageUtils.getWidth(UIUtils.getContext()) / 3 - 5);
     }
+
+    class SwitchPagerTask extends Handler implements Runnable {
+
+        @Override
+        public void run() {
+
+            //在执行一次post ， 循环执行
+            postDelayed(this, 100);
+        }
+
+        /**
+         * 开始切换
+         */
+        public void start() {
+
+            //停掉以前的任务
+            removeCallbacks(this);
+
+            //在执行一次post ， 循环执行
+            postDelayed(this, 100);
+        }
+
+        /**
+         * 停止切换
+         */
+        public void stop() {
+            //停掉以前的任务
+            removeCallbacks(this);
+        }
+    }
+
 }
